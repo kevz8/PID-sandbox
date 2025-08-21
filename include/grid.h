@@ -1,26 +1,18 @@
-#ifndef MY_HEADER_H
-#define MY_HEADER_H
+#ifndef GRID_H
+#define GRID_H
+#include "config.h"
 
 struct Cell {
+    // int x, y;
     bool obstacle = false;
     float windX = 0.0f;
     float windY = 0.0f;
 };
 
-struct Grid {
-public:
-    static const int WIDTH = 40;
-    static const int HEIGHT = 30;
+extern Cell grid[GRID_H][GRID_W];
 
-    Grid();
-    bool inBounds(int, int);
-    bool isObstacle(int, int);
-    void setObstacle(int, int);
-
-    Cell cells[HEIGHT][WIDTH];
-
-    private:
-};
-
+bool inBounds(int x, int y);
+void applyWindToCoord(int x, int y, float wx, float wy);
+void clearWindCoord(int x, int y);
 
 #endif
