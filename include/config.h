@@ -7,6 +7,6 @@ const int CELL_SIZE = 20;
 const int SCREEN_W = GRID_W * CELL_SIZE;
 const int SCREEN_H = GRID_H * CELL_SIZE + 40;
 
-enum mode {OBSTACLE, WIND};
+enum Mode {OBSTACLE, WIND};
 
 #endif

@@ -6,7 +6,7 @@
 extern std::pair<int, int> start, goal;
 extern std::vector<std::pair<int, int>> finalPath;
 
-void reclacPath(std::pair<int, int> from);
+void recalcPath(std::pair<int, int> from);
 float heuristic(std::pair<float, float> curr, std::pair<float, float> goal);
 
 #endif
