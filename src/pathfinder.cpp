@@ -1,32 +1,41 @@
 #include "pathfinder.h"
 #include <queue>
+#include <vector>
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
 
 std::pair<int, int> start = {1, 1};
 std::pair<int, int> goal = {GRID_W - 2, GRID_H - 2};
+std::vector<std::pair<int, int>> finalPath;
 
-struct ComparePairs {
-    bool operator()(const std::pair<float, std::pair<float, float>>& a, const std::pair<float, std::pair<float, float>>& b) {
-        return a.first > b.first;
+struct Node {
+    std::pair<int, int> pos;
+    float cost;
+    bool operator>(const Node& other) const {
+        return cost > other.cost;
     }
 };
 
-float heuristic(std::pair<float, float> curr, std::pair<float, float> goal) {
+float heuristic(std::pair<int, int> curr, std::pair<float, float> goal) {
     return std::abs(curr.first - goal.first) + std::abs(curr.second - goal.second);
 }
 
-void recalcPath(std::pair<float, float> from) {
-    std::priority_queue<std::pair<float, std::pair<float, float>>, std::vector<std::pair<float, std::pair<float, float>>>, ComparePairs> pq;
+void recalcPath(std::pair<int, int> from) {
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
 
+    std::pair<int, int> path[GRID_H][GRID_W];
+    float costSoFar[GRID_H][GRID_W];
 
-    std::unordered_map<int, std::pair<float, float>> path;
-    std::unordered_map<int, float> cost;
-    auto hash = [](int x, int y) {return y * GRID_W + x;};
+    for (int y = 0; y < GRID_H; y++) {
+        for (int x = 0; x < GRID_W; x++) {
+            costSoFar[y][x] = std::numeric_limits<int>::max();
+        }
+    }
 
-    pq.push({0.0f, from});
-    cost[hash(from.first, from.second)] = 0.0f;
+    pq.push({from, 0});
+    costSoFar[from.second][from.first] = 0.0f;
+    path[from.second][from.first] = from;
 
     static const std::pair<float, float> dirs[4] = {
         {1, 0},
@@ -36,12 +45,10 @@ void recalcPath(std::pair<float, float> from) {
     };
 
     while (!pq.empty()) {
-        std::pair<float, std::pair<float, float>> top = pq.top();
+        Node top = pq.top();
         pq.pop();
-        float currCost = top.first;
-        std::pair<float, float> curr = top.second;
-        float cx = top.second.first;
-        float cy = top.second.second;
+        int cx = top.pos.first;
+        int cy = top.pos.second;
 
         if (cx == goal.first && cy == goal.second) {
             break;
@@ -51,38 +58,32 @@ void recalcPath(std::pair<float, float> from) {
             int nx = cx + dirs[i].first;
             int ny = cy + dirs[i].second;
 
-            if (!inBounds(nx, ny)) continue;
-            if (grid[ny][nx].obstacle) continue;
+            if (!inBounds(nx, ny) || grid[ny][nx].obstacle) continue;
 
-            int currHash = hash(cx, cy);
-            float newCost = cost[currHash] + 1.0f;
-            int nextHash = hash(nx, ny);
+            float newCost = costSoFar[cy][cx] + 1;
 
-            if (cost.count(nextHash) == 0 || newCost < cost[nextHash]) {
-                cost[nextHash] = newCost;
+            if (newCost < costSoFar[ny][nx]) {
+                costSoFar[ny][nx] = newCost;
+                float priority = newCost + heuristic(std::make_pair(nx, ny), goal);
 
-                std::pair<int, int> nextPos = {nx, ny};
-                float price = newCost + heuristic(nextPos, goal);
+                pq.push({{nx, ny}, priority});
 
-                pq.push(std::make_pair(price, nextPos));
-
-                path[nextHash] = curr;
+                path[ny][nx] = top.pos;
             }
         }
     }
 
-    path.clear();
-    std::pair<float, float> curr = goal;
-    while (!(curr.first == from.first && curr.second == from.second)) {
-        path.emplace(curr);
-        int h = hash(curr.first, curr.second);
-        if (!path.count(h)) {
-            path.clear();
+    finalPath.clear();
+    std::pair<int, int> curr = goal;
+    while (curr.first != from.first || curr.second != from.second) {
+        finalPath.push_back(curr);
+        if (curr.first < 0 || curr.second < 0) {
+            finalPath.clear();
             return;
         }
 
-        curr = path[h];
+        curr = path[curr.second][curr.first];
     }
 
-    std::reverse(path.begin(), path.end());
+    std::reverse(finalPath.begin(), finalPath.end());
 }

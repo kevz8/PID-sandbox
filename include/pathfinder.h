@@ -4,8 +4,9 @@
 #include <vector>
 
 extern std::pair<int, int> start, goal;
+extern std::vector<std::pair<int, int>> finalPath;
 
-void reclacPath(float curr_x, float curr_y);
-int hash(int x, int y);
+void reclacPath(std::pair<int, int> from);
+float heuristic(std::pair<float, float> curr, std::pair<float, float> goal);
 
 #endif
