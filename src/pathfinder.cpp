@@ -22,6 +22,7 @@ float heuristic(std::pair<int, int> curr, std::pair<float, float> goal) {
 }
 
 void recalcPath(std::pair<int, int> from) {
+    finalPath.clear();
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
 
     std::pair<int, int> path[GRID_H][GRID_W];

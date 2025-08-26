@@ -148,8 +148,8 @@ int main() {
             float speed = std::sqrt(bot.vel.first * bot.vel.first + bot.vel.second * bot.vel.second);
             
             std::pair<float, float> newPos = {bot.pos.first + bot.vel.first * dt, bot.pos.second + bot.vel.second * dt};
-            int newX = (int) newPos.first;
-            int newY = (int) newPos.second;
+            int newX = (int) newPos.first / CELL_SIZE;
+            int newY = (int) newPos.second / CELL_SIZE;
 
             bool collision = false;
             std::pair<float, float> normalForce = {0.0f, 0.0f};
