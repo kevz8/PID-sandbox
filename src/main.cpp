@@ -130,6 +130,7 @@ int main() {
                 P * error.first + I * integral.first + D * derivative.first, 
                 P * error.second + I * integral.second + D * derivative.second
             };
+            control = {control.first * 0.3f, control.second * 0.3f};
 
             int botX = (int) bot.pos.first / CELL_SIZE;
             int botY = (int) bot.pos.second / CELL_SIZE;
