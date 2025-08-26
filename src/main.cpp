@@ -104,11 +104,6 @@ int main() {
                     std::pair<float, float> dir = {dx / CELL_SIZE, dy / CELL_SIZE};
                     applyWindToCoord(windAt.first, windAt.second, dir);
                 }
-
-                // std::pair<float, float> dir = {mx - windAt.first, my - windAt.second};
-                // if (std::abs(dir.first + dir.second) > 0) {
-                //     applyWindToCoord(windAt.first, windAt.second, dir);
-                // }
             }
 
             windAt = {-1, -1};
@@ -120,7 +115,7 @@ int main() {
             std::pair<int, int> target = {(cell.first + 0.5f) * CELL_SIZE, (cell.second + 0.5f) * CELL_SIZE};
             std::pair<float, float> error = {target.first - bot.pos.first, target.second - bot.pos.second};
 
-            if (std::sqrt(std::sqrt(error.first * error.first + error.second * error.second)) < CELL_SIZE * 0.2f) finalPath.erase(finalPath.begin());
+            if (std::sqrt(std::sqrt(error.first * error.first + error.second * error.second)) < CELL_SIZE * 0.15f) finalPath.erase(finalPath.begin());
 
             integral = {integral.first + error.first, integral.second + error.second};
             std::pair<float, float> derivative = {error.first - prevError.first, error.second - prevError.second};
@@ -130,7 +125,7 @@ int main() {
                 P * error.first + I * integral.first + D * derivative.first, 
                 P * error.second + I * integral.second + D * derivative.second
             };
-            control = {control.first * 0.3f, control.second * 0.3f};
+            control = {control.first * 0.5f, control.second * 0.5f};
 
             int botX = (int) bot.pos.first / CELL_SIZE;
             int botY = (int) bot.pos.second / CELL_SIZE;
@@ -152,8 +147,9 @@ int main() {
             int newX = (int) newPos.first / CELL_SIZE;
             int newY = (int) newPos.second / CELL_SIZE;
 
-            bool collision = false;
+            int collisionCount = 0;
             std::pair<float, float> normalForce = {0.0f, 0.0f};
+            std::pair<float, float> avgNormal = {0.0f, 0.0f};
 
             for (int y = newY - 1; y <= newY + 1; y++) {
                 for (int x = newX - 1; x <= newX + 1; x++) {
@@ -161,18 +157,27 @@ int main() {
                     if (grid[y][x].obstacle) {
                         Rectangle cellRect = {(float) x * CELL_SIZE, (float) y * CELL_SIZE, (float) CELL_SIZE, (float) CELL_SIZE};
                         if (CheckCollisionCircleRec({newPos.first, newPos.second}, botRad, cellRect)) {
-                            collision = true;
-                            break;
+                            collisionCount++;
+                            std::pair<float, float> cellCenter = {(x + 0.5f) * CELL_SIZE, (y + 0.5f) * CELL_SIZE};
+                            normalForce = {bot.pos.first - cellCenter.first, bot.pos.second - cellCenter.second};
+                            float normalForceMag = std::sqrt(normalForce.first * normalForce.first + normalForce.second * normalForce.second);
+                            normalForce.first = normalForce.first / normalForceMag;
+                            normalForce.second = normalForce.second / normalForceMag;
+                            avgNormal = {avgNormal.first + normalForce.first, avgNormal.second + normalForce.second};
                         }
                     }
                 }
-                if (collision) break;
             }
 
-            if (collision) {
-                    newPos = bot.pos;
-                    bot.vel.first *= -0.5f;
-                    bot.vel.second *= -0.5f;
+            avgNormal = {avgNormal.first / (float) collisionCount, avgNormal.second / (float) collisionCount};
+            float avgNormalMag = std::sqrt(avgNormal.first * avgNormal.first + avgNormal.second * avgNormal.second);
+            avgNormal = {avgNormal.first / avgNormalMag, avgNormal.second / avgNormalMag};
+            if (collisionCount > 0) {
+                float projScale = (bot.vel.first * avgNormal.first + bot.vel.second * avgNormal.second);
+                std::pair<float, float> proj = {avgNormal.first * projScale, avgNormal.second * projScale};
+                std::pair<float, float> reflect = {bot.vel.first - 2 * proj.first, bot.vel.second - 2 * proj.second};
+                bot.vel = {reflect.first * 0.6f, reflect.second * 0.6f};
+                bot.pos = {bot.pos.first + avgNormal.first * botRad * 0.1f, bot.pos.second + avgNormal.second * botRad * 0.1f};
             } else {
                 bot.pos = newPos;
             }
@@ -182,7 +187,6 @@ int main() {
                 std::pair<int, int> nextCell = finalPath[0];
                 if (grid[nextCell.second][nextCell.first].obstacle) {
                     recalcPath({currCell.first, currCell.second});
-                    integral = {0.0f, 0.0f};
                 }
             }
         }
