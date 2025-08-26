@@ -22,9 +22,30 @@ void drawButtons(std::vector<Button> buttons) {
     }
 }
 
-// TODO
 void updateGrid() {
+    for (std::pair<int, int> p : finalPath) 
+        DrawRectangleRec({(float) p.first*CELL_SIZE, (float) p.second*CELL_SIZE, (float)CELL_SIZE, (float)CELL_SIZE}, ColorAlpha(GREEN, 0.3f));
 
+    for (int y = 0; y < GRID_H; y++) {
+        for (int x = 0; x < GRID_W; x++) {
+            Rectangle rec = {(float) x * CELL_SIZE, (float) y * CELL_SIZE, CELL_SIZE, CELL_SIZE};
+            if (grid[y][x].obstacle) {
+                DrawRectangleRec(rec, RED);
+            } else {
+                DrawRectangleLinesEx(rec, 1, DARKGRAY);
+            }
+            
+            std::pair<float, float> w = grid[y][x].wind;
+            if (w.first != 0 || w.second != 0 ) {
+                Vector2 center = {(x + 0.5f) * CELL_SIZE, (y + 0.5f) * CELL_SIZE};
+                float len = std::sqrt(w.first * w.first + w.second * w.second);
+                float ex = w.first / (len + 0.7f) * 15.0f + center.x;
+                float ey = w.second / (len + 0.7f) * 15.0f + center.y;
+                Vector2 end = {ex, ey};
+                DrawLineEx(center, end, 3.0f, SKYBLUE);
+            }
+        }
+    }
 }
 
 int main() {
@@ -39,6 +60,7 @@ int main() {
     };
 
     std::pair<int, int> windAt = {-1, -1};
+    std::pair<float, float> mouseWindStart = {-1.0f, -1.0f};
     float P = 1.5f;
     float I = 0.0f;
     float D = 0.3f;
@@ -67,17 +89,30 @@ int main() {
 
             if (editMode == WIND && inBounds(mx, my)) {
                 windAt = {mx, my};
+                mouseWindStart = {mouse.x, mouse.y};
             } else if (inBounds(mx, my)) {
                 grid[(int) my][(int) mx].obstacle = true;
             }
         }
 
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-            std::pair<float, float> dir = {mx - windAt.first, my - windAt.second};
-            if (std::abs(dir.first + dir.second) > 0) {
-                applyWindToCoord(windAt.first, windAt.second, dir);
+            if (windAt.first != -1) {
+                float dx = mouse.x - mouseWindStart.first;
+                float dy = mouse.y - mouseWindStart.second;
+
+                if (std::sqrt(dx * dx + dy * dy)) {
+                    std::pair<float, float> dir = {dx / CELL_SIZE, dy / CELL_SIZE};
+                    applyWindToCoord(windAt.first, windAt.second, dir);
+                }
+
+                // std::pair<float, float> dir = {mx - windAt.first, my - windAt.second};
+                // if (std::abs(dir.first + dir.second) > 0) {
+                //     applyWindToCoord(windAt.first, windAt.second, dir);
+                // }
             }
+
             windAt = {-1, -1};
+            mouseWindStart = {-1, -1};
         }
 
         if (!finalPath.empty()) {
@@ -127,7 +162,6 @@ int main() {
                         if (CheckCollisionCircleRec({newPos.first, newPos.second}, botRad, cellRect)) {
                             collision = true;
                             break;
-                            // std::pair<float, float> center = {(x + 0.5f) * CELL_SIZE, (y + 0.5f) * CELL_SIZE};
                         }
                     }
                 }
@@ -155,8 +189,7 @@ int main() {
         BeginDrawing();
         ClearBackground(WHITE);
 
-        for (std::pair<int, int> p : finalPath) 
-            DrawRectangleRec({(float) p.first*CELL_SIZE, (float) p.second*CELL_SIZE, (float)CELL_SIZE, (float)CELL_SIZE}, ColorAlpha(GREEN, 0.3f));
+        updateGrid();
 
         DrawRectangle((start.first * CELL_SIZE), (start.second * CELL_SIZE), CELL_SIZE, CELL_SIZE, BLUE);
         DrawRectangle((goal.first * CELL_SIZE), (goal.second * CELL_SIZE), CELL_SIZE, CELL_SIZE, GREEN);
