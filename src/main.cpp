@@ -115,7 +115,7 @@ int main() {
             std::pair<int, int> target = {(cell.first + 0.5f) * CELL_SIZE, (cell.second + 0.5f) * CELL_SIZE};
             std::pair<float, float> error = {target.first - bot.pos.first, target.second - bot.pos.second};
 
-            if (std::sqrt(std::sqrt(error.first * error.first + error.second * error.second)) < CELL_SIZE * 0.15f) finalPath.erase(finalPath.begin());
+            if (std::sqrt(std::sqrt(error.first * error.first + error.second * error.second)) < CELL_SIZE * 0.17f) finalPath.erase(finalPath.begin());
 
             integral = {integral.first + error.first, integral.second + error.second};
             std::pair<float, float> derivative = {error.first - prevError.first, error.second - prevError.second};
