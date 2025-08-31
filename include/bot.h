@@ -8,8 +8,9 @@ struct Bot {
     float mass = 0.3f;
     float dragCoeff = 0.2f;
     float maxSpeed = 800.0f;
+    int radius = 7;
 };
 
-Bot bot;
+extern Bot bot;
 
 #endif

@@ -4,7 +4,6 @@
 #include <utility>
 
 struct Cell {
-    // int x, y;
     bool obstacle = false;
     std::pair<float, float> wind = {0.0f, 0.0f};
 };

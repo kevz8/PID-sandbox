@@ -7,7 +7,7 @@
 
 std::pair<int, int> start = {1, 1};
 std::pair<int, int> goal = {GRID_W - 2, GRID_H - 2};
-std::vector<std::pair<int, int>> finalPath;
+std::vector<std::pair<int, int>> currentPath;
 
 struct Node {
     std::pair<int, int> pos;
@@ -17,12 +17,13 @@ struct Node {
     }
 };
 
+// Heuristic function for A* pathfinding. Resturns estimates cost from current bot position to goal.
 float heuristic(std::pair<int, int> curr, std::pair<float, float> goal) {
     return std::abs(curr.first - goal.first) + std::abs(curr.second - goal.second);
 }
 
 void recalcPath(std::pair<int, int> from) {
-    finalPath.clear();
+    currentPath.clear();
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> pq;
 
     std::pair<int, int> path[GRID_H][GRID_W];
@@ -74,17 +75,17 @@ void recalcPath(std::pair<int, int> from) {
         }
     }
 
-    finalPath.clear();
+    currentPath.clear();
     std::pair<int, int> curr = goal;
     while (curr.first != from.first || curr.second != from.second) {
-        finalPath.push_back(curr);
+        currentPath.push_back(curr);
         if (curr.first < 0 || curr.second < 0) {
-            finalPath.clear();
+            currentPath.clear();
             return;
         }
 
         curr = path[curr.second][curr.first];
     }
 
-    std::reverse(finalPath.begin(), finalPath.end());
+    std::reverse(currentPath.begin(), currentPath.end());
 }
